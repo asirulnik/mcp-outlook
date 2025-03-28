@@ -1,0 +1,50 @@
+{
+  "name": "mcp-outlook",
+  "version": "1.1.0",
+  "description": "MCP Server and CLI for interacting with Microsoft Outlook mail",
+  "main": "dist/server.js",
+  "bin": {
+    "outlook-mail-cli": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && bash ./scripts/post-build.sh",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "cli": "ts-node src/index.ts",
+    "test-auth": "ts-node src/cli/index.ts test-auth --user",
+    "list-folders": "ts-node src/cli/index.ts list-folders --user",
+    "list-emails": "ts-node src/cli/index.ts list-emails --user",
+    "read-email": "ts-node src/cli/index.ts read-email --user",
+    "docs:list": "echo 'Available documentation:\n- README.md\n- AZURE_SETUP.md\n- QUICK_START.md\n- DEVELOPER_GUIDE.md\n- TROUBLESHOOTING.md\n- MODULARIZATION_PLAN.md'",
+    "docs:readme": "cat README.md | less",
+    "docs:azure": "cat AZURE_SETUP.md | less",
+    "docs:quickstart": "cat QUICK_START.md | less",
+    "docs:dev": "cat DEVELOPER_GUIDE.md | less",
+    "docs:troubleshoot": "cat TROUBLESHOOTING.md | less",
+    "docs:modularization": "cat MODULARIZATION_PLAN.md | less"
+  },
+  "keywords": [
+    "outlook",
+    "microsoft-graph",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "email"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.13.13",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.8.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "@modelcontextprotocol/sdk": "^1.8.0",
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "isomorphic-fetch": "^3.0.0",
+    "zod": "^3.22.4"
+  }
+}

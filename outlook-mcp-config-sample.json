@@ -1,0 +1,25 @@
+{
+  "tools": {
+    "email": {
+      "listEmails": {
+        "description": "List emails from your Outlook inbox with filtering options",
+        "responses": {
+          "success": "Found {count} emails that match your criteria"
+        }
+      }
+    },
+    "calendar": {
+      "listEvents": {
+        "description": "Find events on your Outlook calendar within a time range",
+        "responses": {
+          "success": "Found {count} events on your calendar"
+        }
+      }
+    }
+  },
+  "errors": {
+    "authentication": {
+      "failed": "Login failed: {message}. Please check your credentials."
+    }
+  }
+}
