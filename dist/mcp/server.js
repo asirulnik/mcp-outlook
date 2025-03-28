@@ -19,13 +19,32 @@ async function startServer() {
         version: '1.0.1'
     });
     // Register tools with the server
-    (0, folderTools_1.registerFolderTools)(server);
-    (0, emailTools_1.registerEmailTools)(server);
-    (0, draftTools_1.registerDraftTools)(server);
-    (0, calendarTools_1.registerCalendarTools)(server);
+    try {
+        console.log('Registering folder tools...');
+        (0, folderTools_1.registerFolderTools)(server);
+        console.log('Registering email tools...');
+        (0, emailTools_1.registerEmailTools)(server);
+        console.log('Registering draft tools...');
+        (0, draftTools_1.registerDraftTools)(server);
+        console.log('Registering calendar tools...');
+        (0, calendarTools_1.registerCalendarTools)(server);
+        console.log('All tools registered successfully.');
+    }
+    catch (error) {
+        console.error('Error registering tools:', error);
+        throw error;
+    }
     // Connect to the transport and start the server
-    const transport = new stdio_js_1.StdioServerTransport();
-    await server.connect(transport);
+    try {
+        console.log('Connecting to transport...');
+        const transport = new stdio_js_1.StdioServerTransport();
+        await server.connect(transport);
+        console.log('Server connected to transport.');
+    }
+    catch (error) {
+        console.error('Error connecting to transport:', error);
+        throw error;
+    }
     console.log('MCP server running. Use Ctrl+C to exit.');
 }
 // Run the server if this file is executed directly

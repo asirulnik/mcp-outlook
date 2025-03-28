@@ -19,14 +19,35 @@ export async function startServer(): Promise<void> {
   });
 
   // Register tools with the server
-  registerFolderTools(server);
-  registerEmailTools(server);
-  registerDraftTools(server);
-  registerCalendarTools(server);
+  try {
+    console.log('Registering folder tools...');
+    registerFolderTools(server);
+    
+    console.log('Registering email tools...');
+    registerEmailTools(server);
+    
+    console.log('Registering draft tools...');
+    registerDraftTools(server);
+    
+    console.log('Registering calendar tools...');
+    registerCalendarTools(server);
+    
+    console.log('All tools registered successfully.');
+  } catch (error) {
+    console.error('Error registering tools:', error);
+    throw error;
+  }
 
   // Connect to the transport and start the server
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  try {
+    console.log('Connecting to transport...');
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.log('Server connected to transport.');
+  } catch (error) {
+    console.error('Error connecting to transport:', error);
+    throw error;
+  }
   
   console.log('MCP server running. Use Ctrl+C to exit.');
 }

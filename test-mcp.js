@@ -67,8 +67,7 @@ const pendingRequests = new Map();
 let folderId = null;
 let emailId = null;
 
-// Function to send an MCP request
-function sendRequest(method, params) {
+async function sendRequest(method, params) {
   return new Promise((resolve, reject) => {
     const id = uuidv4();
     const request = {
@@ -89,31 +88,32 @@ function sendRequest(method, params) {
 
 // Process server output
 rl.on('line', (line) => {
-  try {
-    const message = JSON.parse(line);
-    
-    // Handle response messages
-    if (message.id && pendingRequests.has(message.id)) {
-      const { resolve, reject } = pendingRequests.get(message.id);
-      pendingRequests.delete(message.id);
-      
-      if (message.error) {
-        console.error(`Error in response: ${JSON.stringify(message.error)}`);
-        reject(message.error);
-      } else {
-        resolve(message.result);
-      }
-    }
-    // Handle notification messages (log, progress, etc.)
-    else if (message.method && message.method.startsWith('notifications/')) {
-      console.log(`Notification received: ${message.method}`);
-      if (message.params && message.params.data) {
-        console.log(`Data: ${JSON.stringify(message.params.data)}`);
-      }
-    }
-  } catch (error) {
-    console.error(`Error processing server output: ${error.message}`);
-    console.error(`Raw output: ${line}`);
+try {
+console.log(`Server output: ${line}`);
+const message = JSON.parse(line);
+
+// Handle response messages
+if (message.id && pendingRequests.has(message.id)) {
+const { resolve, reject } = pendingRequests.get(message.id);
+pendingRequests.delete(message.id);
+
+if (message.error) {
+console.error(`Error in response: ${JSON.stringify(message.error)}`);
+  reject(message.error);
+} else {
+  resolve(message.result);
+  }
+}
+// Handle notification messages (log, progress, etc.)
+else if (message.method && message.method.startsWith('notifications/')) {
+console.log(`Notification received: ${message.method}`);
+if (message.params && message.params.data) {
+  console.log(`Data: ${JSON.stringify(message.params.data)}`);
+  }
+  }
+} catch (error) {
+console.error(`Error processing server output: ${error.message}`);
+  console.error(`Raw output: ${line}`);
   }
 });
 
@@ -124,7 +124,7 @@ async function runTests() {
     
     // Test 1: List mail folders
     console.log('\n--- Test 1: List mail folders ---');
-    const folders = await sendRequest('tools/invoke', {
+    const folders = await sendRequest('tools/call', {
       name: 'list-mail-folders',
       arguments: { userEmail }
     });
@@ -132,7 +132,7 @@ async function runTests() {
     
     // Test 2: Create a test folder
     console.log('\n--- Test 2: Create a test folder ---');
-    const createFolderResult = await sendRequest('tools/invoke', {
+    const createFolderResult = await sendRequest('tools/call', {
       name: 'create-folder',
       arguments: {
         userEmail,
@@ -146,7 +146,7 @@ async function runTests() {
     
     // Test 3: Create a subfolder
     console.log('\n--- Test 3: Create a subfolder ---');
-    const createSubfolderResult = await sendRequest('tools/invoke', {
+    const createSubfolderResult = await sendRequest('tools/call', {
       name: 'create-folder',
       arguments: {
         userEmail,
@@ -161,7 +161,7 @@ async function runTests() {
     
     // Test 4: List child folders
     console.log('\n--- Test 4: List child folders ---');
-    const childFolders = await sendRequest('tools/invoke', {
+    const childFolders = await sendRequest('tools/call', {
       name: 'list-child-folders',
       arguments: {
         userEmail,
@@ -172,7 +172,7 @@ async function runTests() {
     
     // Test 5: Create a draft email
     console.log('\n--- Test 5: Create a draft email ---');
-    const createDraftResult = await sendRequest('tools/invoke', {
+    const createDraftResult = await sendRequest('tools/call', {
       name: 'create-draft',
       arguments: {
         userEmail,
@@ -198,7 +198,7 @@ async function runTests() {
     const draftsFolderId = allFolders.find(f => f.displayName === 'Drafts')?.id;
     
     if (draftsFolderId) {
-      const drafts = await sendRequest('tools/invoke', {
+      const drafts = await sendRequest('tools/call', {
         name: 'list-emails',
         arguments: {
           userEmail,
@@ -214,7 +214,7 @@ async function runTests() {
     // Test 7: Read a specific email
     if (emailId) {
       console.log('\n--- Test 7: Read a specific email ---');
-      const email = await sendRequest('tools/invoke', {
+      const email = await sendRequest('tools/call', {
         name: 'read-email',
         arguments: {
           userEmail,
@@ -229,7 +229,7 @@ async function runTests() {
     // Test 8: Convert HTML to text
     console.log('\n--- Test 8: Convert HTML to text ---');
     const htmlContent = `<html><body><h1>Test Heading</h1><p>This is a <b>test</b> paragraph.</p><ul><li>Item 1</li><li>Item 2</li></ul></body></html>`;
-    const htmlToText = await sendRequest('tools/invoke', {
+    const htmlToText = await sendRequest('tools/call', {
       name: 'convert-html-to-text',
       arguments: {
         html: htmlContent,
@@ -244,7 +244,7 @@ async function runTests() {
     
     // Test 9: Update folder name
     console.log('\n--- Test 9: Update folder name ---');
-    const updateFolderResult = await sendRequest('tools/invoke', {
+    const updateFolderResult = await sendRequest('tools/call', {
       name: 'update-folder',
       arguments: {
         userEmail,
