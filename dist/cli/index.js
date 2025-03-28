@@ -120,19 +120,6 @@ program
     .description('Copy a folder to another parent folder (may not be supported by the API)')
     .requiredOption('-u, --user <email>', 'Email address of the user')
     .action((folderIdOrPath, destinationParentFolderIdOrPath, options) => (0, folder_1.copyFolderCommand)(folderIdOrPath, destinationParentFolderIdOrPath, options));
-// Command to list attachments
-program
-    .command('list-attachments <emailId>')
-    .description('List all attachments in a specific email')
-    .requiredOption('-u, --user <email>', 'Email address of the user')
-    .action((emailId, options) => (0, email_1.listAttachmentsCommand)(emailId, options));
-// Command to download attachment
-program
-    .command('download-attachment <emailId> <attachmentId>')
-    .description('Download an attachment from an email')
-    .requiredOption('-u, --user <email>', 'Email address of the user')
-    .option('-o, --output-path <path>', 'Path to save the attachment')
-    .action((emailId, attachmentId, options) => (0, email_1.downloadAttachmentCommand)(emailId, attachmentId, options));
 // Command to list drafts
 program
     .command('list-drafts')

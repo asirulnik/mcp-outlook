@@ -55,19 +55,10 @@ run_cmd "node dist/index.js list-folders -u $USER_EMAIL" "List top-level folders
 # 3. Create a test folder
 run_cmd "node dist/index.js create-folder \"$TEST_FOLDER_NAME\" -u $USER_EMAIL" "Create a test folder"
 
-# 4. Capture folder ID for the created folder (will be used in subsequent commands)
-echo -e "${YELLOW}Getting folder ID for the test folder...${NC}"
-FOLDER_INFO=$(node dist/index.js list-folders -u $USER_EMAIL | grep -B 2 -A 2 "$TEST_FOLDER_NAME")
-echo "$FOLDER_INFO"
-
-# Check if ID was found in the folder info
-if [[ "$FOLDER_INFO" =~ ID:\ ([a-zA-Z0-9+=_-]+) ]]; then
-  FOLDER_ID="${BASH_REMATCH[1]}"
-  echo -e "${GREEN}Found folder ID: $FOLDER_ID${NC}"
-else
-  echo -e "${RED}Could not find folder ID${NC}"
-  exit 1
-fi
+# 4. Use folder path directly instead of relying on ID extraction
+echo -e "${YELLOW}Using folder path for operations...${NC}"
+FOLDER_PATH="/$TEST_FOLDER_NAME"
+echo -e "${GREEN}Folder path: $FOLDER_PATH${NC}"
 echo
 
 # 5. Create a subfolder
@@ -106,16 +97,20 @@ if [ -n "$EMAIL_ID" ]; then
   run_cmd "node dist/index.js read-email $EMAIL_ID -u $USER_EMAIL" "Read draft email"
 fi
 
-# 11. Test HTML to text conversion (using a simple HTML string)
+# 11. Test HTML to text conversion (creating a temp HTML file)
 echo -e "${YELLOW}Testing: Convert HTML to text${NC}"
+TEMP_HTML_FILE="/tmp/test-html-$RANDOM.html"
 HTML="<html><body><h1>Test Heading</h1><p>This is a <b>test</b> paragraph.</p><ul><li>Item 1</li><li>Item 2</li></ul></body></html>"
-CMD="echo '$HTML' | node dist/index.js convert-html"
+echo "$HTML" > "$TEMP_HTML_FILE"
+CMD="node dist/index.js convert-html -f $TEMP_HTML_FILE"
 echo "> $CMD"
 
 if eval "$CMD"; then
   echo -e "${GREEN}✓ Test passed${NC}"
+  rm "$TEMP_HTML_FILE"
 else
   echo -e "${RED}✗ Test failed${NC}"
+  rm "$TEMP_HTML_FILE"
   exit 1
 fi
 echo

@@ -166,20 +166,7 @@ program
   .requiredOption('-u, --user <email>', 'Email address of the user')
   .action((folderIdOrPath, destinationParentFolderIdOrPath, options) => copyFolderCommand(folderIdOrPath, destinationParentFolderIdOrPath, options));
 
-// Command to list attachments
-program
-  .command('list-attachments <emailId>')
-  .description('List all attachments in a specific email')
-  .requiredOption('-u, --user <email>', 'Email address of the user')
-  .action((emailId, options) => listAttachmentsCommand(emailId, options));
 
-// Command to download attachment
-program
-  .command('download-attachment <emailId> <attachmentId>')
-  .description('Download an attachment from an email')
-  .requiredOption('-u, --user <email>', 'Email address of the user')
-  .option('-o, --output-path <path>', 'Path to save the attachment')
-  .action((emailId, attachmentId, options) => downloadAttachmentCommand(emailId, attachmentId, options));
 
 // Command to list drafts
 program
