@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { emailPromptsConfig } from './promptConfig';
-import { loadExternalPrompts } from './externalPromptsLoader';
+import { z } from 'zod';
 
 /**
  * Process a prompt template by replacing parameter placeholders with actual values
@@ -35,75 +35,51 @@ function processTemplate(template: string, params: Record<string, any>, defaults
  * @param server The MCP server instance
  */
 export function registerPrompts(server: McpServer): void {
-  console.log('Registering prompt capabilities...');
+  console.log('Registering built-in prompt capabilities...');
   
-  // Load external prompts
-  const externalPrompts = loadExternalPrompts();
-  
-  // Combine with built-in prompts
-  const allPrompts = {
-    ...emailPromptsConfig,
-    ...externalPrompts
-  };
-  
-  // Handle listPrompts request
-  server.registerListPromptsHandler(async () => {
-    const prompts = [];
+  // Register each built-in prompt
+  for (const [promptId, promptConfig] of Object.entries(emailPromptsConfig)) {
+    // Convert arguments to Zod schema
+    const args: Record<string, any> = {};
     
-    for (const [id, config] of Object.entries(allPrompts)) {
-      const promptArgs = [];
-      
-      // Convert arguments to the format expected by MCP
-      for (const [argName, argConfig] of Object.entries(config.arguments)) {
-        promptArgs.push({
-          name: argName,
-          description: argConfig.description,
-          required: argConfig.required || false
-        });
-      }
-      
-      prompts.push({
-        name: id,
-        description: config.description,
-        arguments: promptArgs
-      });
-    }
-    
-    return prompts;
-  });
-  
-  // Handle getPrompt request
-  server.registerGetPromptHandler(async (name, args) => {
-    // Check if prompt exists
-    if (!allPrompts[name]) {
-      throw new Error(`Prompt '${name}' not found`);
-    }
-    
-    const promptConfig = allPrompts[name];
-    
-    // Gather default values
-    const defaults: Record<string, any> = {};
     for (const [argName, argConfig] of Object.entries(promptConfig.arguments)) {
-      if (argConfig.default !== undefined) {
-        defaults[argName] = argConfig.default;
+      if (argConfig.required) {
+        args[argName] = z.string().describe(argConfig.description);
+      } else {
+        args[argName] = z.string().optional().describe(argConfig.description);
       }
     }
     
-    // Process the template with provided arguments and defaults
-    const processedTemplate = processTemplate(promptConfig.template, args || {}, defaults);
-    
-    // Return in the format expected by MCP
-    return {
-      description: promptConfig.description,
-      messages: [{
-        role: "user",
-        content: {
-          type: "text",
-          text: processedTemplate
+    // Register the prompt
+    server.prompt(
+      promptId,
+      args,
+      (providedArgs) => {
+        // Gather default values
+        const defaults: Record<string, any> = {};
+        for (const [argName, argConfig] of Object.entries(promptConfig.arguments)) {
+          if (argConfig.default !== undefined) {
+            defaults[argName] = argConfig.default;
+          }
         }
-      }]
-    };
-  });
+        
+        // Process the template with provided arguments and defaults
+        const processedTemplate = processTemplate(promptConfig.template, providedArgs || {}, defaults);
+        
+        return {
+          messages: [{
+            role: "user",
+            content: {
+              type: "text",
+              text: processedTemplate
+            }
+          }]
+        };
+      }
+    );
+    
+    console.log(`Registered built-in prompt: ${promptId}`);
+  }
   
-  console.log('Prompt capabilities registered successfully.');
+  console.log('Built-in prompt capabilities registered successfully.');
 }
