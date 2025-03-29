@@ -54,6 +54,7 @@ mcp-outlook/
 - ✅ **Path-based Navigation**: Human-readable folder paths
 - ✅ **CLI Interface**: Comprehensive command-line interface
 - ✅ **MCP Server**: Basic MCP server implementation
+- ✅ **MCP Logging Fix**: Fixed stderr/stdout issue for proper MCP communication
 
 ### In Progress Features
 
@@ -142,6 +143,16 @@ Add the following configuration:
   }
 }
 ```
+
+## Important MCP Server Notes
+
+When developing MCP servers, remember that:
+
+1. **Logging**: All debug/status messages must use `console.error()` instead of `console.log()` when using stdio transport, as stdout is reserved for JSON-RPC protocol messages
+2. **Configuration**: The MCP server uses the Model Context Protocol's stdio transport by default
+3. **Authentication**: The server inherits environment variables from Claude Desktop, which must be configured in the `env` section of the config
+
+For more details on the MCP logging fix, see [MCP_LOGGING_FIX.md](MCP_LOGGING_FIX.md).
 
 ## Current Issues and Debugging
 
