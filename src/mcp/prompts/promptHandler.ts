@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { emailPromptsConfig } from './promptConfig';
-import * as fs from 'fs';
-import * as path from 'path';
+import { loadExternalPrompts } from './externalPromptsLoader';
 
 /**
  * Process a prompt template by replacing parameter placeholders with actual values
@@ -31,28 +30,6 @@ function processTemplate(template: string, params: Record<string, any>, defaults
 }
 
 /**
- * Load external prompt configurations if available
- * @returns Object containing any external prompt configurations
- */
-function loadExternalPrompts(): Record<string, any> {
-  let externalPrompts: Record<string, any> = {};
-  try {
-    const externalConfigPath = path.join(process.cwd(), 'config', 'prompts', 'external-prompts.json');
-    if (fs.existsSync(externalConfigPath)) {
-      console.log(`Loading external prompt configurations from ${externalConfigPath}`);
-      const configData = fs.readFileSync(externalConfigPath, 'utf8');
-      externalPrompts = JSON.parse(configData);
-      console.log(`Loaded ${Object.keys(externalPrompts).length} external prompts`);
-    } else {
-      console.log(`External prompt config file not found at: ${externalConfigPath}`);
-    }
-  } catch (error) {
-    console.error('Error loading external prompt configurations:', error);
-  }
-  return externalPrompts;
-}
-
-/**
  * Register prompt capabilities with the MCP server
  * 
  * @param server The MCP server instance
@@ -63,58 +40,70 @@ export function registerPrompts(server: McpServer): void {
   // Load external prompts
   const externalPrompts = loadExternalPrompts();
   
-  // Merge external prompts with built-in prompts
+  // Combine with built-in prompts
   const allPrompts = {
     ...emailPromptsConfig,
     ...externalPrompts
   };
   
-  // Register each prompt with the server
-  for (const [promptId, promptConfig] of Object.entries(allPrompts)) {
-    // Convert prompt arguments to the format needed by the SDK
-    const args: Record<string, any> = {};
+  // Handle listPrompts request
+  server.registerListPromptsHandler(async () => {
+    const prompts = [];
     
-    if (promptConfig.arguments) {
-      for (const [argName, argConfig] of Object.entries(promptConfig.arguments)) {
-        args[argName] = {
-          description: argConfig.description || '',
+    for (const [id, config] of Object.entries(allPrompts)) {
+      const promptArgs = [];
+      
+      // Convert arguments to the format expected by MCP
+      for (const [argName, argConfig] of Object.entries(config.arguments)) {
+        promptArgs.push({
+          name: argName,
+          description: argConfig.description,
           required: argConfig.required || false
-        };
+        });
+      }
+      
+      prompts.push({
+        name: id,
+        description: config.description,
+        arguments: promptArgs
+      });
+    }
+    
+    return prompts;
+  });
+  
+  // Handle getPrompt request
+  server.registerGetPromptHandler(async (name, args) => {
+    // Check if prompt exists
+    if (!allPrompts[name]) {
+      throw new Error(`Prompt '${name}' not found`);
+    }
+    
+    const promptConfig = allPrompts[name];
+    
+    // Gather default values
+    const defaults: Record<string, any> = {};
+    for (const [argName, argConfig] of Object.entries(promptConfig.arguments)) {
+      if (argConfig.default !== undefined) {
+        defaults[argName] = argConfig.default;
       }
     }
     
-    // Register the prompt
-    server.prompt(
-      promptId,
-      args,
-      async (providedArgs) => {
-        // Gather default values
-        const defaults: Record<string, any> = {};
-        if (promptConfig.arguments) {
-          for (const [argName, argConfig] of Object.entries(promptConfig.arguments)) {
-            if (argConfig.default !== undefined) {
-              defaults[argName] = argConfig.default;
-            }
-          }
-        }
-        
-        // Process the template with provided arguments and defaults
-        const processedTemplate = processTemplate(promptConfig.template, providedArgs || {}, defaults);
-        
-        return {
-          messages: [{
-            role: "user",
-            content: {
-              type: "text",
-              text: processedTemplate
-            }
-          }]
-        };
-      }
-    );
+    // Process the template with provided arguments and defaults
+    const processedTemplate = processTemplate(promptConfig.template, args || {}, defaults);
     
-    console.log(`Registered prompt: ${promptId}`);
-  }
+    // Return in the format expected by MCP
+    return {
+      description: promptConfig.description,
+      messages: [{
+        role: "user",
+        content: {
+          type: "text",
+          text: processedTemplate
+        }
+      }]
+    };
+  });
   
   console.log('Prompt capabilities registered successfully.');
 }
