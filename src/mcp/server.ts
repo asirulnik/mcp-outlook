@@ -8,9 +8,12 @@ import { registerCalendarTools } from './tools/calendarTools';
 /**
  * Outlook MCP Server
  * Provides tools for interacting with Microsoft Outlook mail via the MCP protocol
+ * 
+ * IMPORTANT: When using stdio transport, all logging MUST use console.error()
+ * since stdout is reserved for the JSON-RPC protocol messages.
  */
 export async function startServer(): Promise<void> {
-  console.log('Starting Outlook MCP Server...');
+  console.error('Initializing server...');
   
   // Create the MCP server
   const server = new McpServer({
@@ -20,19 +23,21 @@ export async function startServer(): Promise<void> {
 
   // Register tools with the server
   try {
-    console.log('Registering folder tools...');
+    // Using console.error for all logging since we're using stdio transport
+    // This keeps debug messages separate from the JSON-RPC protocol on stdout
+    console.error('Registering folder tools...');
     registerFolderTools(server);
     
-    console.log('Registering email tools...');
+    console.error('Registering email tools...');
     registerEmailTools(server);
     
-    console.log('Registering draft tools...');
+    console.error('Registering draft tools...');
     registerDraftTools(server);
     
-    console.log('Registering calendar tools...');
+    console.error('Registering calendar tools...');
     registerCalendarTools(server);
     
-    console.log('All tools registered successfully.');
+    console.error('All tools registered successfully.');
   } catch (error) {
     console.error('Error registering tools:', error);
     throw error;
@@ -40,16 +45,14 @@ export async function startServer(): Promise<void> {
 
   // Connect to the transport and start the server
   try {
-    console.log('Connecting to transport...');
+    console.error('Connecting to transport...');
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.log('Server connected to transport.');
+    console.error('Server started and connected successfully');
   } catch (error) {
     console.error('Error connecting to transport:', error);
     throw error;
   }
-  
-  console.log('MCP server running. Use Ctrl+C to exit.');
 }
 
 // Run the server if this file is executed directly
