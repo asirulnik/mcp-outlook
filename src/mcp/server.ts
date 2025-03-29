@@ -5,7 +5,6 @@ import { registerEmailTools } from './tools/emailTools';
 import { registerDraftTools } from './tools/draftTools';
 import { registerCalendarTools } from './tools/calendarTools';
 import { registerPrompts } from './prompts';
-import { registerDynamicPrompts } from './prompts/dynamicPromptsHandler';
 import { defaultAccount, hasDefaultAccount, ensureSampleEnvFile } from '../config/env/defaultAccount';
 
 /**
@@ -45,11 +44,8 @@ export async function startServer(): Promise<void> {
     console.log('Registering calendar tools...');
     registerCalendarTools(server);
     
-    console.log('Registering built-in prompts...');
+    console.log('Registering prompts...');
     registerPrompts(server);
-    
-    console.log('Registering dynamic (external) prompts...');
-    registerDynamicPrompts(server);
     
     console.log('All capabilities registered successfully.');
   } catch (error) {
